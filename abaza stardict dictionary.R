@@ -1,5 +1,5 @@
 setwd("/home/agricolamz/_DATA/OneDrive1/_Work/_Handouts/2017 II Abaza expedition/Abaza seminar/2017.01.23 Abaza syllable structure/abz-rus dict")
-library(rvest); library(tidyverse); library(stringr)
+library(rvest); library(tidyverse); library(stringr); library(httr)
 
 alphabet <- c("А", "Б", "В", "Г", "ГВ", "ГЪ", "ГЪВ", "ГЪЬ", "ГЬ", "ГI", "ГIВ", "Д", "ДЖ", "ДЖВ", "ДЖЬ", "ДЗ", "Е",
               "Ё", "Ж", "ЖВ", "ЖЬ", "З", "И", "Й", "К", "КВ", "КЪ", "КЪВ", "КЪЬ", "КЬ", "КI", "КIВ", "КIЬ", "Л", "ЛЬ",
@@ -37,7 +37,30 @@ meanings <- c(
     user <- GET(x, add_headers('user-agent' = 'r'))
     source <- read_html(user)
     source %>% 
-      html_text()
+      html_text() ->
+      text
+    source %>%
+      html_nodes("td.kmj_rs") %>% 
+      html_text() ->
+      phrase1
+    if(!identical(phrase1, character(0)))
+      sapply(phrase1, function(y){
+        text <<- gsub(y, paste("", y), text)})
+    source %>%
+      html_nodes("td.tvb_rs") %>% 
+      html_text() ->
+      phrase2
+    if(!identical(phrase2, character(0)))
+    sapply(phrase2, function(y){
+      text <<- gsub(y, paste("", y), text)})
+    source %>%
+      html_nodes("td.kmj_as") %>% 
+      html_text() ->
+      phrase3
+    if(!identical(phrase3, character(0)))
+      sapply(phrase3, function(y){
+        text <<- gsub(y, paste("", y), text)})
+    return(text)
   }
   ))
 
@@ -47,7 +70,7 @@ meanings <- unname(meanings)
 words$meaning <- meanings
 
 write.csv(words, "words.csv", row.names = F)
-rm(words, links, source) # some cleaning
+rm(words, links, source, meanings) # some cleaning
 
 words <- read.csv("words.csv")
 
@@ -57,6 +80,8 @@ sapply(1:9, function(x){
 
 sapply(1:9, function(x){
   words$meaning <<- str_replace_all(words$meaning, paste0(x, "\\)"), paste0("\\\\n", x, "\\)"))})
+
+words$meaning <- str_replace_all(words$meaning, ";", ";\\\\n")
 
 # remove duplicates
 dict <- unique(words)
