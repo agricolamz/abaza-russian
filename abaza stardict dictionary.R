@@ -63,16 +63,16 @@ meanings <- c(
     return(text)
   }
   ))
-
+words -> meanings
 meanings <- unlist(meanings)
 meanings <- unname(meanings)
 
-words$meaning <- meanings
+words2$meaning <- meanings
 
-write.csv(words, "words.csv", row.names = F)
+write.table(words2, "words.csv", row.names = F, sep = "\t")
 rm(words, links, source, meanings) # some cleaning
 
-words <- read.csv("words.csv")
+words <- read.table("words.csv", sep = "\t", stringsAsFactors = F, header = T)
 
 # add "\n" before 1. and 1)
 sapply(1:9, function(x){
@@ -82,6 +82,7 @@ sapply(1:9, function(x){
   words$meaning <<- str_replace_all(words$meaning, paste0(x, "\\)"), paste0("\\\\n", x, "\\)"))})
 
 words$meaning <- str_replace_all(words$meaning, ";", ";\\\\n")
+words$meaning <- str_replace_all(words$meaning, "\\\\n\\\\n", "\\\\n")
 
 # remove duplicates
 dict <- unique(words)
